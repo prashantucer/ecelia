@@ -113,11 +113,29 @@
             background: #cbd5e1;
             border-radius: 50%;
             transition: background-color 0.3s ease;
+            position: relative;
         }
 
         .status-dot.online {
             background: #4ade80;
             animation: pulse 2s infinite;
+        }
+
+        .status-dot.online::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes ping {
+            75%, 100% {
+                transform: scale(2);
+                opacity: 0;
+            }
         }
 
         @keyframes pulse {
@@ -773,6 +791,138 @@
         .dark-mode .message-bubble code {
             background: #0f172a;
             color: #818cf8;
+        }
+
+        /* Micro-interactions and polish */
+        .send-btn:active:not(:disabled) {
+            transform: scale(0.9) rotate(-5deg);
+        }
+
+        .quick-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .message-bubble {
+            cursor: default;
+            user-select: text;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 24px;
+            padding: 2px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .input-wrapper:focus-within::before {
+            opacity: 1;
+        }
+
+        .message-bubble::selection {
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        .chat-title {
+            position: relative;
+            display: inline-block;
+        }
+
+        .chat-title::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: white;
+            transition: width 0.3s ease;
+        }
+
+        .chat-header:hover .chat-title::after {
+            width: 100%;
+        }
+
+        .bot-avatar {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .bot-avatar:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .bot-avatar:active {
+            transform: scale(0.95);
+        }
+
+        .message-time {
+            transition: opacity 0.2s ease;
+        }
+
+        .message:hover .message-time {
+            opacity: 0.8;
+        }
+
+        .welcome-message {
+            animation: fadeIn 1s ease-in;
+        }
+
+        .message-bubble strong {
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .message.user .message-bubble strong {
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-indicator {
+            transition: transform 0.2s ease;
+        }
+
+        .status-indicator:hover {
+            transform: scale(1.05);
+        }
+
+        .message-count-badge {
+            transition: all 0.3s ease;
+        }
+
+        .message-count-badge:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .new-message-shake {
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
         }
 
         /* Mobile Responsive */

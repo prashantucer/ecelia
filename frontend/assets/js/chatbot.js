@@ -149,6 +149,12 @@ function addMessage(content, isUser = false) {
     chatMessages.insertBefore(messageDiv, typingIndicator);
     scrollToBottom();
     
+    // Add shake animation for new messages
+    messageDiv.classList.add('new-message-shake');
+    setTimeout(() => {
+        messageDiv.classList.remove('new-message-shake');
+    }, 500);
+    
     messageCount++;
     updateMessageCount();
     
