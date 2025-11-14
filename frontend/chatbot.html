@@ -133,8 +133,12 @@
             position: relative;
         }
 
+        .chat-messages {
+            scroll-behavior: smooth;
+        }
+
         .chat-messages::-webkit-scrollbar {
-            width: 4px;
+            width: 6px;
         }
 
         .chat-messages::-webkit-scrollbar-track {
@@ -142,8 +146,13 @@
         }
 
         .chat-messages::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 2px;
+            background: linear-gradient(180deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #764ba2, #667eea);
         }
 
         .message {
@@ -151,6 +160,7 @@
             display: flex;
             align-items: flex-end;
             animation: messageSlide 0.4s ease-out;
+            position: relative;
         }
 
         @keyframes messageSlide {
@@ -176,6 +186,43 @@
             line-height: 1.5;
             position: relative;
             word-wrap: break-word;
+        }
+
+        .message-actions {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .message:hover .message-actions {
+            opacity: 1;
+        }
+
+        .message-action-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .message-action-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         .message.bot .message-bubble {
@@ -412,6 +459,85 @@
             border: 1px solid #fecaca;
         }
 
+        .clear-chat-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .clear-chat-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .char-counter {
+            position: absolute;
+            bottom: 8px;
+            right: 60px;
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 500;
+            pointer-events: none;
+        }
+
+        .char-counter.warning {
+            color: #f59e0b;
+        }
+
+        .char-counter.error {
+            color: #ef4444;
+        }
+
+        .message-count-badge {
+            position: absolute;
+            top: 12px;
+            right: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .copy-toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1f2937;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .copy-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         /* Mobile Responsive */
         @media (max-width: 480px) {
             body {
@@ -430,16 +556,39 @@
                 border-radius: 0;
                 padding: 20px;
             }
+
+            .message-count-badge {
+                font-size: 10px;
+                padding: 3px 8px;
+                top: 10px;
+                right: 50px;
+            }
+
+            .clear-chat-btn {
+                top: 16px;
+                left: 16px;
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+
+            .char-counter {
+                font-size: 10px;
+                bottom: 6px;
+                right: 55px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="chatbot-container">
         <div class="chat-header">
+            <button class="clear-chat-btn" onclick="clearChat()" title="Clear Chat">🗑️</button>
             <div class="status-indicator">
                 <div class="status-dot"></div>
                 <span>Connecting...</span>
             </div>
+            <div class="message-count-badge" id="messageCount">0 messages</div>
             <div class="bot-avatar">🤖</div>
             <div class="chat-title">Ecelia</div>
             <div class="chat-subtitle">E-Cell UCER Assistant</div>
@@ -487,12 +636,16 @@
                     id="messageInput" 
                     placeholder="Ask me anything about E-Cell UCER..." 
                     rows="1"
+                    maxlength="500"
                 ></textarea>
+                <span class="char-counter" id="charCounter">0/500</span>
                 <button class="send-btn" id="sendBtn">
                     ➤
                 </button>
             </div>
         </div>
+
+        <div class="copy-toast" id="copyToast">Message copied! 📋</div>
     </div>
 
     <!-- Load API and chatbot scripts -->

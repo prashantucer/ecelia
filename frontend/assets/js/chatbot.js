@@ -11,6 +11,7 @@ const typingIndicator = document.getElementById('typingIndicator');
 
 // State management
 let isWaitingForResponse = false;
+let messageCount = 0;
 
 // Utility functions
 function getCurrentTime() {
@@ -29,6 +30,54 @@ function adjustTextarea(textarea) {
     textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
 }
 
+// Copy message function
+function copyMessage(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showCopyToast();
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+    });
+}
+
+// Show copy toast notification
+function showCopyToast() {
+    const toast = document.getElementById('copyToast');
+    if (toast) {
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+}
+
+// Update message count
+function updateMessageCount() {
+    const badge = document.getElementById('messageCount');
+    if (badge) {
+        const count = document.querySelectorAll('.message').length;
+        badge.textContent = `${count} message${count !== 1 ? 's' : ''}`;
+    }
+}
+
+// Update character counter
+function updateCharCounter() {
+    const counter = document.getElementById('charCounter');
+    const input = document.getElementById('messageInput');
+    if (counter && input) {
+        const length = input.value.length;
+        const maxLength = 500;
+        counter.textContent = `${length}/${maxLength}`;
+        
+        counter.classList.remove('warning', 'error');
+        if (length > maxLength * 0.8) {
+            counter.classList.add('warning');
+        }
+        if (length >= maxLength) {
+            counter.classList.add('error');
+        }
+    }
+}
+
 // Message handling
 function addMessage(content, isUser = false) {
     const messageDiv = document.createElement('div');
@@ -36,6 +85,9 @@ function addMessage(content, isUser = false) {
     
     const bubbleDiv = document.createElement('div');
     bubbleDiv.className = 'message-bubble';
+    
+    // Get plain text for copying
+    const plainText = isUser ? content : content.replace(/<[^>]*>/g, '').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
     
     if (isUser) {
         bubbleDiv.textContent = content;
@@ -48,15 +100,29 @@ function addMessage(content, isUser = false) {
             .replace(/`(.*?)`/g, '<code>$1</code>');
     }
     
+    // Add message actions (copy button)
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'message-actions';
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'message-action-btn';
+    copyBtn.innerHTML = '📋';
+    copyBtn.title = 'Copy message';
+    copyBtn.onclick = () => copyMessage(plainText);
+    actionsDiv.appendChild(copyBtn);
+    
     const timeDiv = document.createElement('div');
     timeDiv.className = 'message-time';
     timeDiv.textContent = getCurrentTime();
     
     messageDiv.appendChild(bubbleDiv);
+    messageDiv.appendChild(actionsDiv);
     messageDiv.appendChild(timeDiv);
     
     chatMessages.insertBefore(messageDiv, typingIndicator);
     scrollToBottom();
+    
+    messageCount++;
+    updateMessageCount();
     
     return messageDiv;
 }
@@ -147,10 +213,27 @@ async function checkConnection() {
     }
 }
 
+// Clear chat function
+function clearChat() {
+    if (confirm('Are you sure you want to clear all messages?')) {
+        const messages = document.querySelectorAll('.message');
+        messages.forEach(msg => {
+            if (!msg.querySelector('.quick-actions')) {
+                msg.remove();
+            }
+        });
+        messageCount = 0;
+        updateMessageCount();
+        scrollToBottom();
+    }
+}
+
 // Initialize
 window.addEventListener('load', async () => {
     messageInput.focus();
     scrollToBottom();
+    updateCharCounter();
+    updateMessageCount();
     
     // Check connection status
     await checkConnection();
@@ -161,7 +244,10 @@ window.addEventListener('load', async () => {
 
 // Add event listeners
 messageInput.addEventListener('keydown', handleKeyPress);
-messageInput.addEventListener('input', (e) => adjustTextarea(e.target));
+messageInput.addEventListener('input', (e) => {
+    adjustTextarea(e.target);
+    updateCharCounter();
+});
 sendBtn.addEventListener('click', sendMessage);
 
 // Export functions for global use
@@ -169,3 +255,5 @@ window.sendMessage = sendMessage;
 window.sendQuickQuery = sendQuickQuery;
 window.handleKeyPress = handleKeyPress;
 window.adjustTextarea = adjustTextarea;
+window.clearChat = clearChat;
+window.copyMessage = copyMessage;
